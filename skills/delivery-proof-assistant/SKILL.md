@@ -237,8 +237,8 @@ python -m src.gradio_service
 
 ```bash
 # 环境准备（首次）
-git clone https://github.com/Liyixine/2026-04-30-OPEN.git
-cd 2026-04-30-OPEN
+git clone https://github.com/Liyixine/delivery-proof-assistant.git
+cd delivery-proof-assistant
 pip install -r requirements.txt
 ```
 
