@@ -1,7 +1,7 @@
 """TTS 播报文本生成。
 
-第一版先输出可被 TTS 模型消费的文本。真实音频合成可在灵感流环境中
-接入官方 lab3-text-to-speech baseline。
+将收件人通知转换为更适合语音播报的文本格式，包括数字转中文读法、
+去除 Markdown 符号等后处理。
 """
 
 from __future__ import annotations

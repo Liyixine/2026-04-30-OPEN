@@ -1,8 +1,7 @@
 """OpenVINO VLM 模型下载、加载和推理服务。
 
-该模块参考官方 modelscope-workshop 的 Lab 1 多模态 VLM baseline。
-在没有 OpenVINO 运行环境的机器上不要直接实例化服务；Notebook 中会先
-检查依赖并提供 mock 路径。
+基于 Qwen3-VL 多模态模型，对交付现场照片进行图片理解，
+提取物品、位置、参照物和状态等结构化信息。
 """
 
 from __future__ import annotations

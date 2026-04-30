@@ -1,8 +1,8 @@
-"""独立进程 ASR 命令行入口。
+"""ASR 独立进程命令行入口。
 
-TTS helper 当前依赖 transformers==4.57.3，而 Qwen3-ASR 依赖
-transformers==4.57.6。Notebook 中用独立进程运行 ASR，避免同一个
-Python 进程里已经加载的 transformers 版本影响 processor 初始化。
+Qwen3-TTS 和 Qwen3-ASR 对 transformers 的版本要求不同，在同一进程中
+加载两者可能导致 processor 初始化失败。本模块作为独立进程运行 ASR 推理，
+通过 JSON 文件输出转写结果。
 """
 
 from __future__ import annotations

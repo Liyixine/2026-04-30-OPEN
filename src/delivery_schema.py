@@ -1,6 +1,6 @@
-"""数据结构定义。
+"""交付场景数据结构定义。
 
-这些结构既服务 Notebook 演示，也服务后续 Skill/应用封装。
+定义交付上下文、VLM 观察结果和最终交付说明的数据结构。
 """
 
 from __future__ import annotations

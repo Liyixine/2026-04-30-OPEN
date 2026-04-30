@@ -8,7 +8,7 @@
 - **参考仓库**：https://github.com/openvino-dev-samples/modelscope-workshop
 - **目标设备**：Intel AI PC / 支持 OpenVINO 的本地设备
 - **灵感流 Notebook**：`delivery-proof-assistant.ipynb`
-- **项目仓库**：https://github.com/Liyixine/2026-04-30-OPEN
+- **项目仓库**：https://github.com/Liyixine/delivery-proof-assistant
 
 ## 二、应用场景说明
 
@@ -50,7 +50,7 @@
 |------|------|
 | 运行平台 | 魔搭社区灵感流 |
 | CPU | Intel 系列 |
-| 内存 | ≥ 16 GB |
+| OS | Ubuntu 22.04 |
 | 磁盘 | VLM 模型约 2.5 GB，TTS/ASR 模型各约 1.2 GB |
 
 ### 软件与依赖

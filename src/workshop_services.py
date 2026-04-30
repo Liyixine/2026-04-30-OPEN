@@ -1,8 +1,7 @@
-"""官方 ModelScope workshop ASR/TTS helper 接入。
+"""官方 ModelScope workshop ASR/TTS 模型加载与推理服务。
 
-为避免复制大量官方 helper 源码，本模块通过一个 workshop 目录加载
-`lab2-speech-recognition/qwen_3_asr_helper.py` 和
-`lab3-text-to-speech/qwen_3_tts_helper.py`。
+自动下载并加载官方 workshop 中的 Qwen3-ASR 和 Qwen3-TTS helper，
+提供语音合成和语音识别能力。
 """
 
 from __future__ import annotations
@@ -143,11 +142,24 @@ def transcribe_audio_subprocess(
     output_path: str | Path,
     device: str = "CPU",
     workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR,
+    asr_transformers_version: str = "4.57.6",
 ) -> dict:
-    """在独立 Python 进程中运行 ASR，避免和 TTS 的 transformers 版本冲突。"""
+    """在独立 Python 进程中运行 ASR，避免和 TTS 的 transformers 版本冲突。
+
+    ASR 需要 transformers>=4.57.6，而 TTS 需要 4.57.3。本函数会先在
+    子进程中把 transformers 升到 ASR 所需版本，运行完 ASR 后再装回来。
+    """
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
+
+    # 先升级 transformers 到 ASR 需要的版本
+    _run([
+        sys.executable, "-m", "pip", "install", "-q",
+        f"transformers=={asr_transformers_version}",
+        "--root-user-action=ignore",
+    ])
+
     cmd = [
         sys.executable,
         "-m",
@@ -161,5 +173,15 @@ def transcribe_audio_subprocess(
         "--workshop-dir",
         str(workshop_dir),
     ]
-    _run(cmd)
+
+    try:
+        _run(cmd)
+    finally:
+        # 装回 TTS 兼容的版本，避免影响后续 TTS 使用
+        _run([
+            sys.executable, "-m", "pip", "install", "-q",
+            "transformers>=4.57.0",
+            "--root-user-action=ignore",
+        ])
+
     return json.loads(output.read_text(encoding="utf-8"))
