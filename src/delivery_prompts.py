@@ -21,6 +21,8 @@ VLM_DELIVERY_PROMPT = """你是一个端侧现场交付状态识别助手。
 - status: 交付状态或包装状态
 - confidence_note: 不确定或需要人工确认的部分
 - raw_description: 一句话图片描述
+
+只输出 JSON，不要输出 Markdown，不要输出解释。
 """
 
 
@@ -32,6 +34,7 @@ def build_delivery_prompt(context: DeliveryContext, observation_json: str) -> st
 收件对象：{context.recipient}
 物品提示：{context.item_hint or "无"}
 现场补充备注：{context.extra_note or "无"}
+通知语气：{context.tone}
 
 VLM 图片理解结果：
 {observation_json}
@@ -48,4 +51,5 @@ VLM 图片理解结果：
 - 医院场景避免医疗建议，只描述交接位置和状态
 - 工厂场景强调位置、工位、物料状态
 - 企业场景强调前台、货架、会议室等易找参照物
+- 最终回复必须由当前 VLM 图片理解结果和补充备注生成，不要照抄样例期望答案
 """

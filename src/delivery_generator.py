@@ -31,27 +31,28 @@ def build_recipient_message(context: DeliveryContext, observation: VisionObserva
     """根据场景生成可直接发送给收件人的通知。"""
 
     scene = normalize_scene(context.scene)
-    recipient = _clean(context.recipient, "您好")
+    recipient = _clean(context.recipient, "收件人")
     item = _clean(context.item_hint, observation.item)
     location = _clean(observation.location, "现场指定位置")
     landmark = _clean(observation.landmark, "附近参照物请以照片为准")
     status = _clean(observation.status, "已完成拍照记录")
     note = f"补充说明：{context.extra_note}。" if context.extra_note else ""
+    prefix = f"{recipient}您好"
 
     if scene == "hospital_station":
         return (
-            f"{recipient}您好，{item}已送达{location}，{status}。"
+            f"{prefix}，{item}已送达{location}，{status}。"
             f"可参考现场参照物：{landmark}。请相关人员按交接流程领取。{note}"
         )
 
     if scene == "factory_warehouse":
         return (
-            f"{recipient}您好，{item}已送达{location}，{landmark}，{status}。"
+            f"{prefix}，{item}已送达{location}，{landmark}，{status}。"
             f"现场位置已拍照留档，请按工单或仓储流程确认。{note}"
         )
 
     return (
-        f"{recipient}您好，{item}已送达{location}，旁边可参考：{landmark}，"
+        f"{prefix}，{item}已送达{location}，旁边可参考：{landmark}，"
         f"{status}。请您方便时领取。{note}"
     )
 
@@ -128,6 +129,7 @@ def demo() -> DeliveryResult:
         recipient="张工",
         item_hint="文件袋 1 个",
         extra_note="收件人暂时不在工位",
+        tone="简短、礼貌、可直接发给收件人",
     )
     observation = VisionObservation(
         item="文件袋",

@@ -21,8 +21,16 @@ python -m pip install -r requirements.txt
 python -m src.delivery_generator
 ```
 
-真实 VLM/TTS 推理需要在魔搭灵感流或已配置 OpenVINO baseline 的环境中运行。
-本机如果没有 Intel CPU/GPU/NPU，也可以先运行纯模板生成逻辑。
+真实 VLM 推理请在魔搭灵感流或已配置 OpenVINO baseline 的环境中运行
+`delivery-proof-assistant.ipynb`。Notebook 会从 ModelScope 下载
+`snake7gun/Qwen3-VL-4B-Instruct-int4-ov`，并对 `samples/` 中的三张示例图
+实时推理。
+
+本机如果没有 Intel CPU/GPU/NPU，也可以先运行纯模板生成逻辑：
+
+```bash
+python -m src.delivery_generator
+```
 
 ## 官方 Baseline
 
@@ -40,5 +48,11 @@ https://github.com/openvino-dev-samples/modelscope-workshop
 
 ## 素材要求
 
-后续请将真实测试图片放入 `samples/`，并按
-`samples/manifest.example.json` 补充图片描述、期望输出和追问用例。
+当前已包含三张示例图：
+
+- `samples/office_001.png`
+- `samples/hospital_001.png`
+- `samples/warehouse_001.png`
+
+`samples/manifest.example.json` 只保留必要上下文，不预置最终回复。
+最终通知、TTS 文本和追问回答由 Notebook 运行时生成。

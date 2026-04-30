@@ -2,66 +2,52 @@
   {
     "id": "office_001",
     "scene": "enterprise_office",
-    "image_path": "samples/office_001.jpg",
-    "image_description": "文件袋放在 A 座 3 楼前台右侧桌面，旁边有蓝色文件架。",
+    "image_path": "samples/office_001.png",
+    "image_description": "企业办公楼 A 座 3F 服务台前台桌面上放着一个牛皮纸文件袋，旁边有蓝色文件架、绿植和访客登记牌。",
     "delivery_context": {
       "recipient": "张工",
       "item_hint": "文件袋 1 个",
-      "extra_note": "收件人暂时不在工位"
+      "extra_note": "收件人暂时不在工位，请方便时到前台领取",
+      "tone": "简短、礼貌、可直接发给收件人"
     },
-    "expected_structured_result": {
-      "item": "文件袋 1 个",
-      "location": "A 座 3 楼前台右侧桌面",
-      "landmark": "旁边有蓝色文件架",
-      "status": "包装完整，已放置妥当"
-    },
-    "expected_message": "张工您好，您的文件袋已送达 A 座 3 楼前台右侧桌面，旁边有蓝色文件架，方便您查找。请您方便时领取。",
-    "expected_tts": "张工您好，您的文件袋已送达 A 座三楼前台右侧桌面，旁边有蓝色文件架，请您方便时领取。",
     "followup_cases": [
       {
-        "question": "我还是找不到，旁边还有什么标志？",
-        "expected_answer": "可以留意桌面旁边的蓝色文件架和前台访客登记牌。"
+        "question": "我还是找不到，旁边还有什么标志？"
       }
     ]
   },
   {
     "id": "hospital_001",
     "scene": "hospital_station",
-    "image_path": "samples/hospital_001.jpg",
-    "image_description": "药品袋放在护士站左侧交接台，旁边有交接登记本。",
+    "image_path": "samples/hospital_001.png",
+    "image_description": "医院 9F 护士站物品交接区台面上放着一个白色医疗物品袋，旁边有物品交接区标识、交接登记本、消毒液和蓝色文件夹。",
     "delivery_context": {
       "recipient": "护士站值班人员",
-      "item_hint": "药品袋 1 个",
-      "extra_note": "按科室交接流程领取"
+      "item_hint": "医疗物品袋 1 个",
+      "extra_note": "请按科室物品交接流程领取并登记",
+      "tone": "正式、克制、只描述交接位置"
     },
-    "expected_structured_result": {
-      "item": "药品袋 1 个",
-      "location": "护士站左侧交接台",
-      "landmark": "旁边有交接登记本",
-      "status": "外包装完整"
-    },
-    "expected_message": "护士站值班人员您好，药品袋 1 个已送达护士站左侧交接台，外包装完整。可参考现场参照物：旁边有交接登记本。请相关人员按交接流程领取。",
-    "expected_tts": "护士站值班人员您好，药品袋一个已送达护士站左侧交接台，外包装完整，请相关人员按交接流程领取。",
-    "followup_cases": []
+    "followup_cases": [
+      {
+        "question": "物品放在护士站哪个位置？"
+      }
+    ]
   },
   {
     "id": "warehouse_001",
     "scene": "factory_warehouse",
-    "image_path": "samples/warehouse_001.jpg",
-    "image_description": "三箱物料放在 B 区 04 工位旁黄色周转箱区域。",
+    "image_path": "samples/warehouse_001.png",
+    "image_description": "工厂仓库 B 区 04 工位旁，三只纸箱整齐放在黄色地面标线区域内，旁边有黄色周转箱、金属货架和工位标识牌。",
     "delivery_context": {
       "recipient": "B 区班组",
       "item_hint": "物料箱 3 箱",
-      "extra_note": "已按工单拍照留档"
+      "extra_note": "已按工单拍照留档，请班组按仓储流程确认",
+      "tone": "清晰、偏工单记录风格"
     },
-    "expected_structured_result": {
-      "item": "物料箱 3 箱",
-      "location": "B 区 04 工位旁",
-      "landmark": "黄色周转箱区域",
-      "status": "箱体摆放整齐"
-    },
-    "expected_message": "B 区班组您好，物料箱 3 箱已送达 B 区 04 工位旁，黄色周转箱区域，箱体摆放整齐。现场位置已拍照留档，请按工单或仓储流程确认。",
-    "expected_tts": "B 区班组您好，物料箱三箱已送达 B 区零四工位旁，黄色周转箱区域，请按工单或仓储流程确认。",
-    "followup_cases": []
+    "followup_cases": [
+      {
+        "question": "物料是在工位里面还是旁边的标线区域？"
+      }
+    ]
   }
 ]

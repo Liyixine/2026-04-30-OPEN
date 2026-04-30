@@ -25,6 +25,7 @@ class DeliveryContext:
     recipient: str = "收件人"
     item_hint: str = ""
     extra_note: str = ""
+    tone: str = "简短、礼貌、可直接发送"
     operator: str = "现场交付人员"
 
 
