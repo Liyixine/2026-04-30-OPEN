@@ -216,3 +216,106 @@ article/modelscope-learn-article.md
 6. 运行效果展示
 7. Skill 封装展示
 8. 总结与展望
+
+## 6. 最近工作记录
+
+### 2026-04-30：真实推理 Notebook 打通
+
+已完成：
+
+- 加入三张示例图片：
+  - `samples/office_001.png`
+  - `samples/hospital_001.png`
+  - `samples/warehouse_001.png`
+- 将 `samples/manifest.example.json` 改为只保留必要上下文：
+  - 图片路径
+  - 场景
+  - 收件对象
+  - 物品提示
+  - 补充备注
+  - 可选追问
+- 移除样例中的预置最终回复：
+  - 不再预置 `expected_message`
+  - 不再预置 `expected_tts`
+  - 不再预置 `expected_structured_result`
+- Notebook 改为真实推理优先：
+  - 下载并加载 `snake7gun/Qwen3-VL-4B-Instruct-int4-ov`
+  - 对三张图片实时生成 VLM 结构化观察
+  - 生成送达通知、TTS 文本、追问回答和 Markdown 留档
+
+### 2026-04-30：修复 `qwen3_vl` 加载问题
+
+灵感流中出现：
+
+```text
+KeyError: 'qwen3_vl'
+```
+
+原因：
+
+- 当前环境中的 `transformers / optimum-intel` 版本不认识 Qwen3-VL 架构。
+
+处理：
+
+- 参考官方 `openvino-dev-samples/modelscope-workshop`
+- 将依赖切换到官方兼容组合：
+  - `openvino==2026.0`
+  - 官方固定 commit 的 `optimum-intel`
+  - `torch==2.8`
+  - `transformers==4.57.3`
+- VLM 调用方式改为官方 Lab 1 风格：
+  - 使用 `OVModelForVisualCausalLM.from_pretrained`
+  - 使用 `processor.apply_chat_template(..., tokenize=True, return_dict=True, return_tensors="pt")`
+
+### 2026-04-30：优化 VLM Prompt 和 TTS 文本
+
+观察到 VLM 输出可能把字段写成数组字符串，例如：
+
+```json
+{
+  "location": "['前台接待台', 'A座3F服务台前']"
+}
+```
+
+导致通知和 TTS 变得机械。
+
+处理：
+
+- 新增 `build_vlm_observation_prompt`
+- 将收件对象、目标交付物品、补充备注写入 VLM prompt
+- 明确要求所有字段值必须是自然语言字符串，不允许输出数组
+- 后处理兼容数组、列表字符串和空数组
+- TTS 不再朗读完整通知，而是生成更短、更自然的播报稿
+
+### 2026-04-30：接入 TTS 与 ASR
+
+TTS：
+
+- 参考官方 Lab 3
+- 自动下载 `snake7gun/Qwen3-TTS-CustomVoice-0.6B-fp16-ov`
+- 使用 `generate_custom_voice` 生成音频
+- 输出音频、耗时、音频时长和 RTF
+
+ASR：
+
+- 参考官方 Lab 2
+- 自动下载 `snake7gun/Qwen3-ASR-0.6B-fp16-ov`
+- 初始版本在同一 Kernel 中出现：
+
+```text
+RuntimeError: Processor not loaded. Cannot transcribe.
+```
+
+原因：
+
+- Qwen3-TTS 和 Qwen3-ASR 官方源码当前依赖的 `transformers` 小版本不同：
+  - TTS 依赖 `transformers==4.57.3`
+  - ASR 依赖 `transformers==4.57.6`
+- 同一 Python 进程中先加载 TTS 后，再加载 ASR，可能导致 ASR processor 初始化失败。
+
+处理：
+
+- 新增 `src/asr_cli.py`
+- 新增 `transcribe_audio_subprocess`
+- ASR 改为独立 Python 子进程运行，避免和 TTS 在同一进程中抢依赖版本
+- Notebook 中 ASR 用于回读 TTS 音频，也可扩展为语音追问入口

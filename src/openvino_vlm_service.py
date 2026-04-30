@@ -58,14 +58,50 @@ def observation_from_vlm_text(text: str) -> VisionObservation:
 
     data = extract_json_object(text)
     return VisionObservation(
-        item=str(data.get("item", "")).strip() or "待确认物品",
-        location=str(data.get("location", "")).strip() or "待确认位置",
-        landmark=str(data.get("landmark", "")).strip() or "暂无明显参照物",
-        status=str(data.get("status", "")).strip() or "已拍照记录",
-        confidence_note=str(data.get("confidence_note", "")).strip()
+        item=_to_text(data.get("item", ""), "待确认物品"),
+        location=_to_text(data.get("location", ""), "待确认位置"),
+        landmark=_to_text(data.get("landmark", ""), "暂无明显参照物"),
+        status=_to_status_text(data.get("status", "")),
+        confidence_note=_to_text(data.get("confidence_note", ""), "无")
         or "图片信息有限，请以现场确认为准",
-        raw_description=str(data.get("raw_description", "")).strip(),
+        raw_description=_to_text(data.get("raw_description", ""), ""),
     )
+
+
+def _to_text(value: Any, fallback: str) -> str:
+    """把模型可能输出的数组、字符串数组或空值规整成自然语言。"""
+
+    if value is None:
+        return fallback
+    if isinstance(value, (list, tuple, set)):
+        parts = [str(item).strip() for item in value if str(item).strip()]
+        return "、".join(parts) if parts else fallback
+
+    text = str(value).strip()
+    if not text or text == "[]":
+        return fallback
+
+    # 兼容模型把数组写成字符串的情况，如 "['前台', '服务台']"。
+    if text.startswith("[") and text.endswith("]"):
+        try:
+            import ast
+
+            parsed = ast.literal_eval(text)
+            if isinstance(parsed, (list, tuple, set)):
+                parts = [str(item).strip().strip("'\"") for item in parsed if str(item).strip()]
+                return "、".join(parts) if parts else fallback
+        except Exception:
+            pass
+        text = text.strip("[]")
+
+    return text.replace("'", "").replace('"', "").strip() or fallback
+
+
+def _to_status_text(value: Any) -> str:
+    text = _to_text(value, "已放置在现场并拍照记录")
+    if "待交付" in text:
+        text = text.replace("待交付", "已放置在现场")
+    return text or "已放置在现场并拍照记录"
 
 
 class OpenVINODeliveryVLM:
@@ -128,8 +164,12 @@ class OpenVINODeliveryVLM:
         output_ids = generated_ids[:, inputs["input_ids"].shape[1] :]
         return self.processor.tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
-    def observe_delivery_image(self, image_path: str | Path) -> VisionObservation:
+    def observe_delivery_image(
+        self,
+        image_path: str | Path,
+        question: str = VLM_DELIVERY_PROMPT,
+    ) -> VisionObservation:
         """识别交付现场图片并返回结构化观察。"""
 
-        raw = self.ask_image(image_path=image_path, question=VLM_DELIVERY_PROMPT)
+        raw = self.ask_image(image_path=image_path, question=question)
         return observation_from_vlm_text(raw)

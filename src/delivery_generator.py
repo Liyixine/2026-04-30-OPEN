@@ -27,15 +27,40 @@ def _clean(value: str, fallback: str) -> str:
     return text if text else fallback
 
 
+def _natural(value: str) -> str:
+    """清理列表残留符号，保证通知和 TTS 读起来像人话。"""
+
+    text = _clean(value, "")
+    return (
+        text.replace("[", "")
+        .replace("]", "")
+        .replace("'", "")
+        .replace('"', "")
+        .replace(", ", "、")
+        .replace(",", "、")
+        .strip()
+    )
+
+
+def _natural_status(value: str) -> str:
+    text = _natural(value)
+    text = text.replace("未使用", "").replace("、、", "、").strip("、，, ")
+    if "待交付" in text:
+        text = text.replace("待交付", "已放置在现场")
+    if "已放置在现场" in text and "未开封" in text:
+        return "已放置在现场，外观未开封"
+    return text or "已拍照记录"
+
+
 def build_recipient_message(context: DeliveryContext, observation: VisionObservation) -> str:
     """根据场景生成可直接发送给收件人的通知。"""
 
     scene = normalize_scene(context.scene)
     recipient = _clean(context.recipient, "收件人")
     item = _clean(context.item_hint, observation.item)
-    location = _clean(observation.location, "现场指定位置")
-    landmark = _clean(observation.landmark, "附近参照物请以照片为准")
-    status = _clean(observation.status, "已完成拍照记录")
+    location = _natural(_clean(observation.location, "现场指定位置"))
+    landmark = _natural(_clean(observation.landmark, "附近参照物请以照片为准"))
+    status = _natural_status(_clean(observation.status, "已完成拍照记录"))
     note = f"补充说明：{context.extra_note}。" if context.extra_note else ""
     prefix = f"{recipient}您好"
 
@@ -102,23 +127,50 @@ def generate_delivery_result(
     scene = normalize_scene(context.scene)
     context.scene = scene
     message = build_recipient_message(context, observation)
-    tts_text = make_tts_text(message)
     archive = build_archive_markdown(context, observation, message)
 
     result = DeliveryResult(
         scene=scene,
         scene_label=SCENE_LABELS[scene],
         item=_clean(context.item_hint, observation.item),
-        location=_clean(observation.location, "待确认位置"),
-        landmark=_clean(observation.landmark, "暂无明显参照物"),
-        status=_clean(observation.status, "已拍照记录"),
+        location=_natural(_clean(observation.location, "待确认位置")),
+        landmark=_natural(_clean(observation.landmark, "暂无明显参照物")),
+        status=_natural_status(_clean(observation.status, "已拍照记录")),
         risk_note=RISK_NOTES[scene],
         recipient_message=message,
-        tts_text=tts_text,
+        tts_text=build_spoken_tts_text(context, observation),
         archive_markdown=archive,
     )
     result.followup_answer = answer_followup(followup_question, result)
     return result
+
+
+def build_spoken_tts_text(context: DeliveryContext, observation: VisionObservation) -> str:
+    """生成更适合直接播报的短文本，不照读完整留档信息。"""
+
+    scene = normalize_scene(context.scene)
+    recipient = _clean(context.recipient, "收件人")
+    item = _clean(context.item_hint, observation.item)
+    location = _natural(_clean(observation.location, "现场指定位置"))
+    landmark = _natural(_clean(observation.landmark, "附近参照物请以照片为准"))
+
+    if scene == "hospital_station":
+        text = (
+            f"{recipient}您好，{item}已放在{location}。"
+            f"您可以参考{landmark}，请按交接流程领取。"
+        )
+    elif scene == "factory_warehouse":
+        text = (
+            f"{recipient}您好，{item}已送到{location}。"
+            f"附近参照物是{landmark}，请按工单确认。"
+        )
+    else:
+        text = (
+            f"{recipient}您好，{item}已放在{location}。"
+            f"旁边有{landmark}，方便您查找，请您方便时领取。"
+        )
+
+    return make_tts_text(text)
 
 
 def demo() -> DeliveryResult:

@@ -28,5 +28,7 @@ def make_tts_text(message: str) -> str:
 
     # 删除 Markdown/JSON 中常见但不适合播报的符号。
     text = re.sub(r"[`*_#>\[\]{}]", "", text)
+    text = text.replace("'", "").replace('"', "")
+    text = text.replace(", ", "、").replace(",", "、")
     text = re.sub(r"\s+", " ", text)
     return text

@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -38,15 +40,18 @@ def ensure_workshop(workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR) -> Path:
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> None:
-    subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True)
+    env = os.environ.copy()
+    env.setdefault("PIP_ROOT_USER_ACTION", "ignore")
+    env.setdefault("GIT_CONFIG_PARAMETERS", "'advice.detachedHead=false'")
+    subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True, env=env)
 
 
 def _ensure_editable_repo(repo: str, commit: str, target: Path) -> None:
     if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
         _run(["git", "clone", repo, str(target)])
-        _run(["git", "checkout", commit], cwd=target)
-    _run([sys.executable, "-m", "pip", "install", "-q", "-e", str(target)])
+        _run(["git", "-c", "advice.detachedHead=false", "checkout", "--quiet", commit], cwd=target)
+    _run([sys.executable, "-m", "pip", "install", "-q", "-e", str(target), "--root-user-action=ignore"])
 
 
 def ensure_qwen_audio_libs(workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR) -> Path:
@@ -62,6 +67,26 @@ def ensure_qwen_audio_libs(workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR) -> P
         QWEN3_TTS_REPO,
         QWEN3_TTS_COMMIT,
         root / "lab3-text-to-speech" / "Qwen3-TTS",
+    )
+    return root
+
+
+def ensure_qwen_tts_lib(workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR) -> Path:
+    root = ensure_workshop(workshop_dir)
+    _ensure_editable_repo(
+        QWEN3_TTS_REPO,
+        QWEN3_TTS_COMMIT,
+        root / "lab3-text-to-speech" / "Qwen3-TTS",
+    )
+    return root
+
+
+def ensure_qwen_asr_lib(workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR) -> Path:
+    root = ensure_workshop(workshop_dir)
+    _ensure_editable_repo(
+        QWEN3_ASR_REPO,
+        QWEN3_ASR_COMMIT,
+        root / "lab2-speech-recognition" / "Qwen3-ASR",
     )
     return root
 
@@ -83,7 +108,7 @@ def load_asr_model(
 ):
     """加载官方 Qwen3-ASR OpenVINO helper。"""
 
-    root = ensure_qwen_audio_libs(workshop_dir)
+    root = ensure_qwen_asr_lib(workshop_dir)
     asr_dir = root / "lab2-speech-recognition"
     sys.path.insert(0, str(asr_dir.resolve()))
     from qwen_3_asr_helper import OVQwen3ASRModel
@@ -104,10 +129,37 @@ def load_tts_model(
 ):
     """加载官方 Qwen3-TTS OpenVINO helper。"""
 
-    root = ensure_qwen_audio_libs(workshop_dir)
+    root = ensure_qwen_tts_lib(workshop_dir)
     tts_dir = root / "lab3-text-to-speech"
     sys.path.insert(0, str(tts_dir.resolve()))
     from qwen_3_tts_helper import OVQwen3TTSModel
 
     local_model_dir = download_model(TTS_MODEL_ID, model_dir)
     return OVQwen3TTSModel.from_pretrained(model_dir=local_model_dir, device=device)
+
+
+def transcribe_audio_subprocess(
+    audio_path: str | Path,
+    output_path: str | Path,
+    device: str = "CPU",
+    workshop_dir: str | Path = DEFAULT_WORKSHOP_DIR,
+) -> dict:
+    """在独立 Python 进程中运行 ASR，避免和 TTS 的 transformers 版本冲突。"""
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        sys.executable,
+        "-m",
+        "src.asr_cli",
+        "--audio",
+        str(audio_path),
+        "--output",
+        str(output),
+        "--device",
+        device,
+        "--workshop-dir",
+        str(workshop_dir),
+    ]
+    _run(cmd)
+    return json.loads(output.read_text(encoding="utf-8"))
