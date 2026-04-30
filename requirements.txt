@@ -17,7 +17,7 @@ git+https://github.com/openvino-dev-samples/optimum-intel.git@2f62e5aee74b4acba3
 modelscope
 # Qwen3-TTS official helper currently pins 4.57.3. Qwen3-ASR is run in a
 # separate subprocess that can install/use its own 4.57.6 dependency.
-transformers==4.57.3
+transformers>=4.57.0
 accelerate
 huggingface_hub
 qwen-vl-utils
