@@ -1,0 +1,9 @@
+openvino>=2025.4
+optimum-intel
+transformers
+modelscope
+qwen-vl-utils
+Pillow
+gradio
+numpy
+soundfile

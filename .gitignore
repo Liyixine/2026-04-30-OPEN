@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+outputs/*.wav
+outputs/*.mp3
+outputs/*.json
+outputs/*.md
+!outputs/.gitkeep
