@@ -1,9 +1,37 @@
-openvino>=2025.4
-optimum-intel
-transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Core OpenVINO runtime. Qwen3-VL support in this project follows the official
+# ModelScope workshop baseline and needs the newer OpenVINO/Optimum stack.
+openvino==2026.0
+nncf>=2.15.0
+
+# PyTorch CPU wheels
+torch==2.8
+torchvision==0.23.0
+torchaudio==2.8.0
+
+# Optimum Intel fixed commit used by the official workshop baseline.
+git+https://github.com/openvino-dev-samples/optimum-intel.git@2f62e5aee74b4acba3836e1f26678c0db0a09c00
+
+# Model download and multimodal processing
 modelscope
+transformers>=4.57.0
+accelerate
+huggingface_hub
 qwen-vl-utils
 Pillow
-gradio
-numpy
+
+# ASR/TTS dependencies
+qwen-asr
+scipy
 soundfile
+librosa
+
+# Demo / notebook
+gradio==6.9.0
+jupyterlab
+ipywidgets
+ipykernel
+
+# Official workshop constrains numpy for compatibility.
+numpy<2.0

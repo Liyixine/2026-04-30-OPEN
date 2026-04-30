@@ -101,8 +101,24 @@
 安装方式参考：
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt --upgrade
 ```
+
+实践中如果遇到：
+
+```text
+KeyError: 'qwen3_vl'
+```
+
+说明当前环境中的 `transformers / optimum-intel` 版本无法识别 Qwen3-VL 架构。
+我参考官方 workshop 的依赖组合，将项目依赖调整为：
+
+- `openvino==2026.0`
+- 官方固定 commit 的 `optimum-intel`
+- `transformers>=4.57.0`
+- `torch==2.8`
+
+重新安装依赖并重启 Kernel 后，再加载 VLM 模型。
 
 VLM 参考调用：
 
@@ -113,7 +129,10 @@ from qwen_vl_utils import process_vision_info
 ```
 
 ASR 和 TTS 后续分别参考官方 `lab2-speech-recognition` 与
-`lab3-text-to-speech` 中的 helper 文件接入。
+`lab3-text-to-speech` 中的 helper 文件接入。当前 Notebook 已加入：
+
+- Qwen3-TTS：将生成的送达通知合成为语音
+- Qwen3-ASR：对 TTS 音频进行回读验证，也可扩展为语音追问入口
 
 ## 五、从 Baseline 到交付助手的创新改造
 

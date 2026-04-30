@@ -77,9 +77,19 @@ class OpenVINODeliveryVLM:
 
         self.model_dir = Path(model_dir)
         self.device = device
-        self.model = OVModelForVisualCausalLM.from_pretrained(str(self.model_dir), device=device)
+        try:
+            self.model = OVModelForVisualCausalLM.from_pretrained(self.model_dir, device=device)
+        except KeyError as exc:
+            if "qwen3_vl" not in str(exc):
+                raise
+            raise RuntimeError(
+                "当前环境不认识 Qwen3-VL 架构。请先按官方 workshop 依赖重装："
+                "`pip install -r requirements.txt --upgrade`。关键依赖包括 "
+                "`openvino==2026.0`、官方固定 commit 的 `optimum-intel`、"
+                "`transformers>=4.57.0`。"
+            ) from exc
         self.processor = AutoProcessor.from_pretrained(
-            str(self.model_dir),
+            self.model_dir,
             min_pixels=256 * 28 * 28,
             max_pixels=1280 * 28 * 28,
         )
@@ -97,29 +107,21 @@ class OpenVINODeliveryVLM:
     def ask_image(self, image_path: str | Path, question: str = VLM_DELIVERY_PROMPT) -> str:
         """对单张图片提问，返回模型原始文本。"""
 
-        from qwen_vl_utils import process_vision_info
-
         path = Path(image_path).resolve()
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": f"file://{path}"},
+                    {"type": "image", "image": str(path)},
                     {"type": "text", "text": question},
                 ],
             }
         ]
-        text = self.processor.apply_chat_template(
+        inputs = self.processor.apply_chat_template(
             messages,
-            tokenize=False,
+            tokenize=True,
             add_generation_prompt=True,
-        )
-        image_inputs, video_inputs = process_vision_info(messages)
-        inputs = self.processor(
-            text=[text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
+            return_dict=True,
             return_tensors="pt",
         )
         generated_ids = self.model.generate(**inputs, max_new_tokens=512)

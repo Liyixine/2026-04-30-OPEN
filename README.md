@@ -21,10 +21,13 @@ python -m pip install -r requirements.txt
 python -m src.delivery_generator
 ```
 
-真实 VLM 推理请在魔搭灵感流或已配置 OpenVINO baseline 的环境中运行
-`delivery-proof-assistant.ipynb`。Notebook 会从 ModelScope 下载
-`snake7gun/Qwen3-VL-4B-Instruct-int4-ov`，并对 `samples/` 中的三张示例图
-实时推理。
+真实推理请在魔搭灵感流或已配置 OpenVINO baseline 的环境中运行
+`delivery-proof-assistant.ipynb`。Notebook 会完成：
+
+1. 从 ModelScope 下载 `snake7gun/Qwen3-VL-4B-Instruct-int4-ov`
+2. 使用 OpenVINO VLM 对 `samples/` 中三张示例图实时推理
+3. 生成收件人通知、TTS 播报文本和 Markdown 留档
+4. 下载并加载官方 TTS/ASR helper，生成语音并进行 ASR 回读验证
 
 本机如果没有 Intel CPU/GPU/NPU，也可以先运行纯模板生成逻辑：
 
@@ -56,3 +59,34 @@ https://github.com/openvino-dev-samples/modelscope-workshop
 
 `samples/manifest.example.json` 只保留必要上下文，不预置最终回复。
 最终通知、TTS 文本和追问回答由 Notebook 运行时生成。
+
+## 常见问题
+
+### `KeyError: 'qwen3_vl'`
+
+这是依赖版本问题，不是图片或模型目录问题。请重新运行 Notebook 的依赖安装单元：
+
+```bash
+python -m pip install -r requirements.txt --upgrade
+```
+
+然后重启 Kernel，再从头运行 Notebook。
+
+本项目依赖官方 workshop 的固定版本组合：
+
+- `openvino==2026.0`
+- 官方固定 commit 的 `optimum-intel`
+- `transformers>=4.57.0`
+
+### ASR/TTS 为什么会 clone 官方仓库？
+
+官方 ASR/TTS helper 依赖 `Qwen3-ASR` 和 `Qwen3-TTS` 源码包。
+Notebook 会通过 `src/workshop_services.py` 自动 clone：
+
+```text
+openvino-dev-samples/modelscope-workshop
+QwenLM/Qwen3-ASR
+QwenLM/Qwen3-TTS
+```
+
+这些目录会写入 `vendor/`，不会提交到 GitHub。
